@@ -1,0 +1,26 @@
+{
+  "bindings": [
+    {
+      "name": "apiAction",
+      "type": "serviceBusTrigger",
+      "direction": "in",
+      "queueName": "trawler",
+      "connection": "SERVICE_BUS_CONNECTION_STRING"
+    },
+    {
+      "name": "serviceBusApiQueue",
+      "type": "serviceBus",
+      "queueName": "trawler",
+      "connection": "SERVICE_BUS_CONNECTION_STRING",
+      "direction": "out"
+    },
+    {
+      "name": "serviceBusDiscordQueue",
+      "type": "serviceBus",
+      "queueName": "discord",
+      "connection": "SERVICE_BUS_CONNECTION_STRING",
+      "direction": "out"
+    }
+  ],
+  "scriptFile": "../dist/service-bus/index.js"
+}
