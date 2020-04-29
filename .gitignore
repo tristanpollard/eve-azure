@@ -97,3 +97,6 @@ local.settings.json
 *.js.map
 
 knexfile.ts
+
+jwt.key
+jwt.key.pub

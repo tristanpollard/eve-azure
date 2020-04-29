@@ -46,9 +46,9 @@ export interface ISender {
     username: string
     nickname?: string
     discriminator: string
-    roles: Array<string>
-    channel: string
-    guild: string
+    roles?: Array<string>
+    channel?: string
+    guild?: string
     administrator: boolean
 }
 

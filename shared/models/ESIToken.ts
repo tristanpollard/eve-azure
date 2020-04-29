@@ -2,7 +2,9 @@ import { Model, UniqueViolationError, Transaction } from "objection"
 import axios from 'axios'
 import jwt from 'jsonwebtoken'
 
-interface IESIToken {
+class ESIToken extends Model {
+
+  id: number
   character_id: number
   access_token: string
   refresh_token: string
@@ -11,18 +13,11 @@ interface IESIToken {
   created_at: Date
   updated_at: Date
   deleted_at?: Date
-}
-
-class ESIToken extends Model implements IESIToken {
 
   static get tableName(): string {
     return 'esi_tokens';
   }
-
-  static get idColumn(): string {
-    return 'character_id'
-  }
-
+  
   static get relationMappings() {
     const DiscordToken = require('./DiscordToken').default
     const Character = require('./character').default
@@ -39,27 +34,23 @@ class ESIToken extends Model implements IESIToken {
         relation: Model.HasOneThroughRelation,
         modelClass: DiscordToken,
         join: {
-          from: 'esi_tokens.character_id',
+          from: 'esi_tokens.id',
           through: {
-            from: 'token_ownership.character_id',
-            to: 'token_ownership.discord_user_id'
+            from: 'token_ownership.esi_token_id',
+            to: [
+              'token_ownership.discord_user_id',
+              'token_ownership.discord_guild_id'
+            ]
           },
-          to: 'discord_tokens.user_id'
+          to: [
+            'discord_tokens.user_id',
+            'discord_tokens.guild'
+          ]
         }
       }
     }
   }
-
-  character_id: number
-  access_token: string
-  refresh_token: string
-  character_name: string
-  expires: Date
-  created_at: Date
-  updated_at: Date
-  // TODO: soft delete
-  deleted_at?: Date
-
+  
   async $beforeInsert(queryContext) {
     await super.$beforeInsert(queryContext);
     this.updateFieldsFromAccessToken()
@@ -114,7 +105,7 @@ class ESIToken extends Model implements IESIToken {
       access_token: r.data.access_token,
       refresh_token: r.data.refresh_token
     }
-    // TODO: upsert?
+    
     const token = await ESIToken.query(trx).insert(model)
       .catch(async err => {
         if (err instanceof UniqueViolationError) {

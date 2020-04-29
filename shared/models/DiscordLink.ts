@@ -4,9 +4,10 @@ export default class DiscordLink extends Model {
   type: string
   type_id: number
   role_id: string
+  guild: string
 
   static get idColumn() {
-    return ['type', 'type_id', 'role_id'];
+    return ['type', 'type_id', 'role_id', 'guild'];
   }
 
   static get tableName(): string {

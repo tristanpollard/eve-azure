@@ -4,19 +4,19 @@ import Knex from 'knex'
 import knexfile from '../knexfile'
 import ESIToken from '../shared/models/ESIToken'
 import esi from 'node-esi'
-import InvalidArgumentError from '../shared/errors/InvalidArgumentError'
+import IllegalArgumentError from '../shared/errors/IllegalArgumentError'
 import { IServiceBusAction, IServiceBusDiscordAction } from "./types"
 import { handleTrawlAction } from "./handlers"
 import { handleDiscordAction } from "./handlers/discord"
 
-const knex = Knex(knexfile)
+export const knex = Knex(knexfile)
 
 Model.knex(knex)
 
 // @ts-ignore
 esi.defaults.model = ESIToken
 
-const serviceBusQueueTrigger: AzureFunction = async function (context: Context, apiAction: IServiceBusAction): Promise<void> {
+export const serviceBusQueueTrigger: AzureFunction = async function (context: Context, apiAction: IServiceBusAction): Promise<void> {
     console.log(apiAction)
     switch (apiAction.group) {
         case "trawl":
@@ -30,7 +30,7 @@ const serviceBusQueueTrigger: AzureFunction = async function (context: Context, 
             context.bindings.serviceBusDiscordQueue = discordAction?.discord
             break
         default:
-            throw new InvalidArgumentError
+            throw new IllegalArgumentError
     }
     console.log(context.bindings)
 }

@@ -69,8 +69,8 @@ export default class Character extends Model {
           to: 'discord_role_mapping.type_id'
         }
       },
-      token: {
-        relation: Model.HasOneRelation,
+      tokens: {
+        relation: Model.HasManyRelation,
         modelClass: ESIToken,
         join: {
           from: 'character.id',

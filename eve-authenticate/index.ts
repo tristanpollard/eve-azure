@@ -1,5 +1,5 @@
 import { AzureFunction, Context, HttpRequest } from "@azure/functions"
-import Token from '../shared/models/ESIToken'
+import ESIToken from '../shared/models/ESIToken'
 import { Model, UniqueViolationError } from 'objection'
 import Knex from 'knex'
 import knexfile from '../knexfile'
@@ -36,21 +36,12 @@ const httpTrigger: AzureFunction = async function (context: Context, req: HttpRe
     }
     
     const trx = await DiscordToken.startTransaction()
-    let eveToken: Token
+    let eveToken: ESIToken
     try {
-        const discordUser = await DiscordToken.query(trx).findById(discordToken.discord_user_id)
-        // TODO: relationship
-        eveToken = await Token.verify(code, trx)
-        const tokenOwnership = await TokenOwnership.query(trx).insert({
-            character_id: eveToken.character_id,
-            discord_user_id: discordUser.user_id
-        }).catch(err => {
-            if (err instanceof UniqueViolationError) {
-                // no need to upsert as only values are the PK
-                return
-            }
-            throw err
-        })
+        const discordUser = await DiscordToken.query(trx).findById([discordToken.discord_user_id, discordToken.guild])
+        eveToken = await ESIToken.verify(code, trx)
+        await discordUser.$relatedQuery('esi_tokens', trx).where('character_id', eveToken.character_id).delete()
+        await discordUser.$relatedQuery('esi_tokens', trx).relate(eveToken).debug()
         await trx.commit()
     } catch (err) {
         await trx.rollback()

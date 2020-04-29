@@ -22,5 +22,6 @@
       "direction": "out"
     }
   ],
+  "entryPoint": "serviceBusQueueTrigger",
   "scriptFile": "../dist/service-bus/index.js"
 }

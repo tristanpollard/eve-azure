@@ -3,12 +3,17 @@ import { UniqueViolationError } from 'objection'
 import DiscordLink from '../../../shared/models/DiscordLink'
 import { getResolutionForName, authorizedTypes } from './'
 import { ICommandRequest } from '../..'
+import IllegalArgumentError from '../../../shared/errors/IllegalArgumentError'
 
 const unlink: IServerCommand = {
     command: "unlink",
     minArgs: 3,
     usage: "!unlink <alliance|character|corporation> <name> <discord role> [--raw]",
     perform: async (commandRequest: ICommandRequest): Promise<ICommandResponse> => {
+        const guild = commandRequest.guild?.id
+        if (!guild) {
+            throw new IllegalArgumentError
+        }
         const commandArgs = commandRequest.args.split(" ")
         const isRawRole = commandRequest.flags?.includes('raw')
         const linkType = commandArgs.shift()
@@ -55,7 +60,8 @@ const unlink: IServerCommand = {
         return DiscordLink.query().deleteById([
             linkType,
             resolution.id,
-            mentionedRoleId
+            mentionedRoleId,
+            guild
         ]).then(data => {
             if (!data) {
                 return {

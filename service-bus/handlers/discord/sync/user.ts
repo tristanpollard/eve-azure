@@ -2,11 +2,15 @@ import DiscordToken from "../../../../shared/models/DiscordToken"
 import { IServiceBusDiscordAction, IServiceBusActions } from "../../../types"
 import DiscordLink from "../../../../shared/models/DiscordLink"
 import { IDiscordSyncAction } from "."
+import IllegalArgumentError from "../../../../shared/errors/IllegalArgumentError"
 
 export const handleDiscordUserSync = async (serviceBusAction: IServiceBusDiscordAction): Promise<IServiceBusActions> => {
     const userMentionId: string = serviceBusAction.data.id
+    if (!userMentionId || !serviceBusAction.guild) {
+        throw new IllegalArgumentError
+    }
     const roleIds: Array<string> = await DiscordToken.query()
-        .where('user_id', userMentionId)
+        .findById([userMentionId, serviceBusAction.guild])
         .withGraphFetched('esi_tokens.character.[discordLink, corporation.[discordLink, alliance.discordLink]]')
         .first()
         .then(data => {

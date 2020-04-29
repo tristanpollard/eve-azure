@@ -3,12 +3,17 @@ import { UniqueViolationError } from 'objection'
 import DiscordLink from '../../../shared/models/DiscordLink'
 import { getResolutionForName, authorizedTypes } from './'
 import { ICommandRequest } from '../..'
+import IllegalArgumentError from '../../../shared/errors/IllegalArgumentError'
 
 const link: IServerCommand = {
     command: "link",
     minArgs: 2,
     usage: "!link <alliance|character|corporation> <name> [<@discord role>] [--raw]",
     perform: async (commandRequest: ICommandRequest): Promise<ICommandResponse> => {
+        const guild = commandRequest.guild?.id
+        if (!guild) {
+            throw new IllegalArgumentError
+        }
         const commandArgs = commandRequest.args.split(" ")
         const isRawRole = commandRequest.flags?.includes('raw')
         const linkType = commandArgs.shift()
@@ -59,10 +64,11 @@ const link: IServerCommand = {
                 })
         }
 
-        return await DiscordLink.query().insert({
+        return DiscordLink.query().insert({
             type: linkType,
             type_id: resolution.id,
-            role_id: mentionedRoleId
+            role_id: mentionedRoleId,
+            guild
         }).then(data => {
             const embeddedMessage: IEmbeddedMessage = {
                 title: "Success!",

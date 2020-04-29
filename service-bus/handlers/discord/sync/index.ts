@@ -1,5 +1,5 @@
 import { IServiceBusDiscordAction, IServiceBusActions } from "../../../types"
-import InvalidArgumentError from "../../../../shared/errors/InvalidArgumentError"
+import IllegalArgumentError from "../../../../shared/errors/IllegalArgumentError"
 import { handleDiscordUserSync } from "./user"
 import { handleDiscordRoleSync } from "./role"
 
@@ -23,5 +23,5 @@ export const handleDiscordSyncAction = (serviceBusAction: IServiceBusDiscordActi
         case 'role':
             return handleDiscordRoleSync(serviceBusAction)
     }
-    throw new InvalidArgumentError
+    throw new IllegalArgumentError
 }

@@ -11,7 +11,7 @@ export interface IServiceBusAction {
 }
 
 export interface IServiceBusDiscordAction extends IServiceBusAction {
-    guild: string
+    guild?: string
     channel?: string
     sender?: string
 }

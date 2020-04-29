@@ -1,6 +1,6 @@
 import { IServerCommand, IEmbeddedMessage, ICommandResponse } from './index'
 import { getId } from '../../shared/api/public/search'
-import InvalidArgumentError from '../../shared/errors/InvalidArgumentError'
+import IllegalArgumentError from '../../shared/errors/IllegalArgumentError'
 import NotFoundError from '../../shared/errors/NotFoundError'
 import { ICommandRequest } from '..'
 
@@ -14,7 +14,7 @@ const trawl: IServerCommand = {
         const split = commandRequest.args.split(' ')
         const type = split.shift().toLowerCase()
         if (!authorizedTypes.includes(type)) {
-            throw new InvalidArgumentError
+            throw new IllegalArgumentError
         }
         const searchName = split.join(' ')
         let id: number

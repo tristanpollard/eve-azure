@@ -2,15 +2,30 @@ import { Model, UniqueViolationError } from "objection"
 import axios from 'axios'
 import Querystring from 'querystring'
 import ESIToken from "./ESIToken";
+import DiscordAuthSession, { InvalidDiscordAuthSession } from "./DiscordAuthSession";
 
 class DiscordToken extends Model {
 
-    static get tableName(): string {
-        return 'discord_tokens';
+    user_id: string
+    guild: string
+    access_token: string
+    refresh_token: string
+    username: string
+    discriminator: number
+    expires: Date
+    flags: number
+    mfa?: boolean
+    locale?: string
+    email?: string
+    created_at: Date
+    updated_at: Date
+
+    static get idColumn(): Array<string> {
+        return ['user_id', 'guild']
     }
 
-    static get idColumn(): string {
-        return 'user_id'
+    static get tableName(): string {
+        return 'discord_tokens';
     }
 
     static get virtualAttributes(): Array<string> {
@@ -23,29 +38,22 @@ class DiscordToken extends Model {
             relation: Model.ManyToManyRelation,
             modelClass: ESIToken,
             join: {
-              from: 'discord_tokens.user_id',
+              from: [
+                  'discord_tokens.user_id',
+                  'discord_tokens.guild'
+              ],
               through: {
-                from: 'token_ownership.discord_user_id',
-                to: 'token_ownership.character_id'
+                from: [
+                    'token_ownership.discord_user_id',
+                    'token_ownership.discord_guild_id'
+                ],
+                to: 'token_ownership.esi_token_id'
               },
-              to: 'esi_tokens.character_id'
+              to: 'esi_tokens.id'
             }
           }
         }
       }
-
-    user_id: string
-    access_token: string
-    refresh_token: string
-    username: string
-    discriminator: number
-    created_at: Date
-    updated_at: Date
-    expires: Date
-    flags: number
-    mfa?: boolean
-    locale?: string
-    email?: string
 
     get full_username(): string {
         return `${this.username}#${this.discriminator}`
@@ -70,7 +78,7 @@ class DiscordToken extends Model {
 
     }
 
-    static async verify(code: string): Promise<DiscordToken> {
+    static async verify(code: string, guild: string): Promise<DiscordToken> {
         const params = Querystring['stringify']({
             grant_type: "authorization_code",
             code,
@@ -101,6 +109,11 @@ class DiscordToken extends Model {
                 return data.data
             })
 
+            const session = await DiscordAuthSession.userAuthSessionForGuild(discordInfo.id, guild)
+            if (!session) {
+                throw new InvalidDiscordAuthSession
+            }
+
             const expiresDate = new Date()
             expiresDate.setSeconds(expiresDate.getSeconds() + discordToken.expires_in)
             const updateInfo = {
@@ -117,10 +130,11 @@ class DiscordToken extends Model {
 
             const token = DiscordToken.query().insert({
                 user_id: discordInfo.id,
+                guild: guild,
                 ...updateInfo
             }).catch(async err => {
                 if (err instanceof UniqueViolationError) {
-                    return await DiscordToken.query().updateAndFetchById(discordInfo.id, updateInfo)
+                    return await DiscordToken.query().patchAndFetchById([discordInfo.id, guild], updateInfo)
                 }
                 throw(err)
             })

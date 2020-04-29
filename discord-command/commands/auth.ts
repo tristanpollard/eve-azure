@@ -1,14 +1,23 @@
-import { IServerCommand, IEmbeddedMessage, ICommandResponse } from './index'
+import { IServerCommand, ICommandResponse } from './index'
 import { ICommandRequest } from '..'
+import DiscordAuthSession from '../../shared/models/DiscordAuthSession'
 
 const auth: IServerCommand = {
     command: "auth",
     minArgs: 0,
     usage: "!auth",
     perform: async (commandRequest: ICommandRequest): Promise<ICommandResponse> => {
-        const authUrl = process.env.DISCORD_AUTH_URI
+        if (!commandRequest.guild?.id) {
+            return {
+                reply: {
+                    message: '!auth must be ran in the context of a guild.'
+                }
+            }
+        }
+        const authUrl = `${process.env.DISCORD_AUTH_URI}/${commandRequest.guild.id}`
+        await DiscordAuthSession.createOrUpdateAuthSession(commandRequest.sender.user_id, commandRequest.guild?.id)
         const response: ICommandResponse = {
-            reply: {
+            dm: {
                 message: authUrl,
             }
         }

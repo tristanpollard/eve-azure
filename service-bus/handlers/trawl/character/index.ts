@@ -1,4 +1,4 @@
-import InvalidArgumentError from "../../../../shared/errors/InvalidArgumentError"
+import IllegalArgumentError from "../../../../shared/errors/IllegalArgumentError"
 import ESIToken from "../../../../shared/models/ESIToken"
 import { IServiceBusAction, IServiceBusActions } from "../../../types"
 import { trawl as trawlWallet } from './character-wallet'
@@ -7,7 +7,7 @@ import { trawl as trawlPublicCharacter } from './public-character'
 export const handleCharacterAction = async (trawlerAction: IServiceBusAction): Promise<IServiceBusActions> => {
     const id = trawlerAction.data?.id
     if (!id) {
-        throw new InvalidArgumentError
+        throw new IllegalArgumentError
     }
     const token = await ESIToken.query().findById(id)
     switch (trawlerAction.target) {
@@ -38,6 +38,6 @@ export const handleCharacterAction = async (trawlerAction: IServiceBusAction): P
             trawlWallet(token)
             return {}
         default:
-            throw new InvalidArgumentError
+            throw new IllegalArgumentError
     }
 }

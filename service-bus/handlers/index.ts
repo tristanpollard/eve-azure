@@ -1,5 +1,5 @@
 import { IServiceBusAction, IServiceBusActions } from "../types"
-import InvalidArgumentError from "../../shared/errors/InvalidArgumentError"
+import IllegalArgumentError from "../../shared/errors/IllegalArgumentError"
 import { handleAllianceAction } from "./trawl/alliance"
 import { handleCharacterAction } from "./trawl/character"
 import { handleCorporationAction } from "./trawl/corporation"
@@ -13,5 +13,5 @@ export const handleTrawlAction = (trawlerAction: IServiceBusAction): Promise<ISe
         case "corporation":
             return handleCorporationAction(trawlerAction)
     }
-    throw new InvalidArgumentError
+    throw new IllegalArgumentError
 }
