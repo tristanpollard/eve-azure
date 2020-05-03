@@ -9,7 +9,12 @@ export const trawl = async (corporationId: number): Promise<IServiceBusActions> 
         date_founded: new Date(info.corporation.date_founded)
     }
 
-    const corporation = await Corporation.query().findById(corporationId)
+    const dbCorporation = await Corporation.query().findById(corporationId)
+
+    const didChangeAlliance = dbCorporation.alliance_id != info.corporation.alliance_id
+    const isNewCorporation = !dbCorporation
+
+    const corporation = await Corporation.query()
     .patchAndFetchById(corporationId, insertData)
     .then(data => {
         if (!data) {
@@ -25,6 +30,10 @@ export const trawl = async (corporationId: number): Promise<IServiceBusActions> 
         group: "trawl",
         action: "alliance",
         data: { id: String(corporation.alliance_id) }
+    }
+
+    if (isNewCorporation || didChangeAlliance) {
+        // do sync
     }
 
     return {

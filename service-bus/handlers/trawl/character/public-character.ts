@@ -9,21 +9,29 @@ export const trawl = async (characterId: number): Promise<IServiceBusActions> =>
         ...info.character,
         birthday: new Date(info.character.birthday)
     }
-    const character = await Character.query().insertAndFetch({ ...insertData, id: characterId })
-    .catch(async err => {
-        if (err instanceof UniqueViolationError) {
-            return await Character.query().updateAndFetchById(characterId, insertData)
-        }
-        throw err
-    })
+    
+    const dbCharacter = await Character.query().findById(characterId)
+    const didChangeCorporation = dbCharacter?.corporation_id != info.character.corporation_id
+    const didChangeAlliance = dbCharacter?.alliance_id != info.character.alliance_id
+    const isNewCharacter = !dbCharacter
+
+    if (!dbCharacter) {
+        const character = await Character.query().insertAndFetch({ ...insertData, id: characterId })
+    } else {
+        await Character.query().for(dbCharacter.id).patch(insertData)
+    }
 
     var d = new Date();
     d.setSeconds(d.getSeconds() - (60*60*6))
-    const corporation = await Character.relatedQuery('corporation').for(character.id).where('updated_at', '>', d).first()
+    const corporation = await Character.relatedQuery('corporation').for(characterId).where('updated_at', '>', d).first()
     const apiMessage: IServiceBusAction | undefined = corporation ? undefined : { 
         group: "trawl",
         action: "corporation",
-        data: { id: String(character.corporation_id) }
+        data: { id: String(info.character.corporation_id) }
+    }
+
+    if (didChangeAlliance || didChangeCorporation || isNewCharacter) {
+        // do sync
     }
 
     return {

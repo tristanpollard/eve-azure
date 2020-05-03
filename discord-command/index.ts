@@ -53,6 +53,14 @@ export interface ISender {
 }
 
 const httpTrigger: AzureFunction = async function (context: Context, req: HttpRequest): Promise<void> {
+
+    if (req.method == "GET") {
+        context.res = {
+            body: commands
+        }
+        return
+    }
+
     const commandRequest: ICommandRequest = req.body
     const command = commands[commandRequest.command]
     if (command) {

@@ -2,6 +2,7 @@ import { IServiceBusDiscordAction, IServiceBusActions } from "../../../types"
 import IllegalArgumentError from "../../../../shared/errors/IllegalArgumentError"
 import { handleDiscordUserSync } from "./user"
 import { handleDiscordRoleSync } from "./role"
+import { handleDiscordGuildSync } from "./guild"
 
 export interface IDiscordSyncAction {
     role?: {
@@ -13,7 +14,6 @@ export interface IDiscordSyncAction {
         role_ids: Array<string>
         remove_role_ids: Array<string>
     }
-
 }
 
 export const handleDiscordSyncAction = (serviceBusAction: IServiceBusDiscordAction): Promise<IServiceBusActions> => {
@@ -22,6 +22,8 @@ export const handleDiscordSyncAction = (serviceBusAction: IServiceBusDiscordActi
             return handleDiscordUserSync(serviceBusAction)
         case 'role':
             return handleDiscordRoleSync(serviceBusAction)
+        case 'guild':
+            return handleDiscordGuildSync(serviceBusAction)
     }
     throw new IllegalArgumentError
 }

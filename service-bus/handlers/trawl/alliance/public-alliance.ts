@@ -9,7 +9,7 @@ export const trawl = async (allianceId: number): Promise<IServiceBusActions> => 
         date_founded: new Date(info.alliance.date_founded)
     }
 
-    await Alliance.query().findById(allianceId)
+    await Alliance.query()
     .patchAndFetchById(allianceId, insertData)
     .then(data => {
         if (!data) {
