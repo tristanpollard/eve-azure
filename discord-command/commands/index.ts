@@ -6,6 +6,7 @@ import trawl from './trawl'
 import tokens from './tokens'
 import { ICommandRequest } from '..'
 import sync from './sync'
+import help from './help'
 import { IServiceBusAction } from '../../service-bus/types'
 
 const commands: { [name: string]: IServerCommand } = {}
@@ -16,6 +17,7 @@ commands[unlink.command] = unlink
 commands[trawl.command] = trawl
 commands[tokens.command] = tokens
 commands[sync.command] = sync
+commands[help.command] = help
 
 export default commands
 
