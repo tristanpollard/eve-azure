@@ -11,7 +11,7 @@ export const trawl = async (corporationId: number): Promise<IServiceBusActions> 
 
     const dbCorporation = await Corporation.query().findById(corporationId)
 
-    const didChangeAlliance = dbCorporation.alliance_id != info.corporation.alliance_id
+    const didChangeAlliance = dbCorporation?.alliance_id != info.corporation.alliance_id
     const isNewCorporation = !dbCorporation
 
     const corporation = await Corporation.query()
@@ -25,7 +25,7 @@ export const trawl = async (corporationId: number): Promise<IServiceBusActions> 
 
     var d = new Date();
     d.setSeconds(d.getSeconds() - (60*60*6))
-    const alliance = corporation.alliance_id ? await Corporation.relatedQuery('alliance').for(corporation.id).where('updated_at', '>', d).first() : undefined
+    const alliance = corporation?.alliance_id ? await Corporation.relatedQuery('alliance').for(corporation.id).where('updated_at', '>', d).first() : undefined
     const apiMessage: IServiceBusAction | undefined = alliance || !corporation.alliance_id ? undefined : { 
         group: "trawl",
         action: "alliance",

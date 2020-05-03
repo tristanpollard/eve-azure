@@ -3,6 +3,7 @@ import IllegalArgumentError from "../../../../shared/errors/IllegalArgumentError
 import { handleDiscordUserSync } from "./user"
 import { handleDiscordRoleSync } from "./role"
 import { handleDiscordGuildSync } from "./guild"
+import { handleDiscordCharacterSync } from './character'
 
 export interface IDiscordSyncAction {
     role?: {
@@ -18,6 +19,8 @@ export interface IDiscordSyncAction {
 
 export const handleDiscordSyncAction = (serviceBusAction: IServiceBusDiscordAction): Promise<IServiceBusActions> => {
     switch (serviceBusAction.target) {
+        case 'character':
+            return handleDiscordCharacterSync(serviceBusAction)
         case 'user':
             return handleDiscordUserSync(serviceBusAction)
         case 'role':

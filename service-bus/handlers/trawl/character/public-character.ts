@@ -1,42 +1,40 @@
 import Character from '../../../../shared/models/character'
 import { getCharacterInfo } from '../../../../shared/api/public/character'
-import { UniqueViolationError} from 'objection'
-import { IServiceBusActions, IServiceBusAction } from '../../../types'
+import { UniqueViolationError } from 'objection'
+import { IServiceBusActions, IServiceBusAction, IServiceBusDiscordAction } from '../../../types'
+import IllegalArgumentError from '../../../../shared/errors/IllegalArgumentError'
 
-export const trawl = async (characterId: number): Promise<IServiceBusActions> => {
+export const trawl = async (serviceBusAction: IServiceBusAction): Promise<IServiceBusActions> => {
+    const characterId = serviceBusAction.data?.id
+    if (!characterId) {
+        throw new IllegalArgumentError
+    }
     const info = await getCharacterInfo(characterId)
     const insertData = {
         ...info.character,
         birthday: new Date(info.character.birthday)
     }
-    
-    const dbCharacter = await Character.query().findById(characterId)
-    const didChangeCorporation = dbCharacter?.corporation_id != info.character.corporation_id
-    const didChangeAlliance = dbCharacter?.alliance_id != info.character.alliance_id
-    const isNewCharacter = !dbCharacter
 
-    if (!dbCharacter) {
-        const character = await Character.query().insertAndFetch({ ...insertData, id: characterId })
-    } else {
-        await Character.query().for(dbCharacter.id).patch(insertData)
-    }
+    await Character.query().insert({ ...insertData, id: characterId })
+        .catch(async err => {
+            if (err instanceof UniqueViolationError) {
+                await Character.query().findById(characterId).patch(insertData)
+            }
+            throw err
+        })
 
     var d = new Date();
-    d.setSeconds(d.getSeconds() - (60*60*6))
+    d.setSeconds(d.getSeconds() - (60 * 60 * 6))
     const corporation = await Character.relatedQuery('corporation').for(characterId).where('updated_at', '>', d).first()
-    const apiMessage: IServiceBusAction | undefined = corporation ? undefined : { 
+    const apiMessage: IServiceBusAction | undefined = corporation ? undefined : {
         group: "trawl",
         action: "corporation",
-        data: { id: String(info.character.corporation_id) }
-    }
-
-    if (didChangeAlliance || didChangeCorporation || isNewCharacter) {
-        // do sync
+        data: { id: info.character.corporation_id }
     }
 
     return {
         api: [
             apiMessage
-        ].filter(el => el)
+        ].filter(el => el),
     }
 }

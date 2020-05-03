@@ -88,10 +88,10 @@ const link: IServerCommand = {
                     {
                         group: 'discord',
                         action: 'sync',
-                        target: linkType,
+                        target: 'role',
                         guild: commandRequest.guild.id,
                         data: {
-                            id: resolution.id
+                            id: mentionedRoleId
                         }
                     }
                 ]

@@ -17,7 +17,19 @@ class ESIToken extends Model {
   static get tableName(): string {
     return 'esi_tokens';
   }
-  
+
+  static get virtualAttributes(): Array<string> {
+    return ['decoded_token', 'scopes']
+  }
+
+  get decoded_token(): any {
+    return jwt.decode(this.access_token)
+  }
+
+  get scopes(): Set<string> {
+    return new Set(this.decoded_token.scp)
+  }
+
   static get relationMappings() {
     const DiscordToken = require('./DiscordToken').default
     const Character = require('./character').default
@@ -50,7 +62,7 @@ class ESIToken extends Model {
       }
     }
   }
-  
+
   async $beforeInsert(queryContext) {
     await super.$beforeInsert(queryContext);
     this.updateFieldsFromAccessToken()
@@ -105,7 +117,7 @@ class ESIToken extends Model {
       access_token: r.data.access_token,
       refresh_token: r.data.refresh_token
     }
-    
+
     const token = await ESIToken.query(trx).insert(model)
       .catch(async err => {
         if (err instanceof UniqueViolationError) {
@@ -117,11 +129,10 @@ class ESIToken extends Model {
   }
 
   private updateFieldsFromAccessToken() {
-    const decodedToken = jwt.decode(this.access_token)
     this.updated_at = new Date()
-    this.character_id = decodedToken.sub.split(":").pop()
-    this.character_name = decodedToken.name
-    this.expires = new Date(decodedToken.exp * 1000)
+    this.character_id = this.decoded_token.sub.split(":").pop()
+    this.character_name = this.decoded_token.name
+    this.expires = new Date(this.decoded_token.exp * 1000)
   }
 
 }
