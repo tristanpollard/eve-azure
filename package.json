@@ -15,7 +15,7 @@
     "axios": "^0.19.2",
     "form-data": "^3.0.0",
     "jsonwebtoken": "^8.5.1",
-    "knex": "^0.21.0",
+    "knex": "^2.4.0",
     "mariadb": "^2.3.1",
     "mysql": "^2.18.1",
     "node-esi": "github:flupster/NodeESI",
